@@ -1,10 +1,14 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
+#include <Windows.h>
 
-extern "C" int _stdcall filter();
+typedef int(_fastcall* MyProc1)();
 
 int main()
 {
+    HINSTANCE dllHandle = NULL;
+    dllHandle = LoadLibrary(L"ASMFilter.dll");
+    MyProc1 filter = (MyProc1)GetProcAddress(dllHandle, "filter");
     int i = filter();
     std::cout << "Hello World!\n"<< i;
+
 }

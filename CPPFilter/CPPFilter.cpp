@@ -1,4 +1,4 @@
 #include "pch.h"
-int __declspec(dllexport) filter(void) {
+int filter(void) {
 	return 2;
 }
