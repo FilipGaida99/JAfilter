@@ -1,5 +1,4 @@
 .code
-
 filter proc
 mov eax, 5
 ret
