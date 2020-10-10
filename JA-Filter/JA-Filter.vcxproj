@@ -209,6 +209,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -220,9 +221,11 @@
   <ItemGroup>
     <ClCompile Include="FileInterface.cpp" />
     <ClCompile Include="JA-Filter.cpp" />
+    <ClCompile Include="LibraryCaller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileInterface.h" />
+    <ClInclude Include="LibraryCaller.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

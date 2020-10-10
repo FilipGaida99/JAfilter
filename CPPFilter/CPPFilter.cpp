@@ -1,49 +1,44 @@
 #include "pch.h"
 #include <cstdint>
-#include <thread>
 using namespace std;
 
-const int mask[] = { 1,0,-1,1,1,-1,1,0,-1 };
+const int mask[] = { 1,0,-1,1,0,-1,1,0,-1 };
 
-struct ProcessedUnit {
-	uint8_t*& pixels;
-	uint8_t*& newPixels; 
-	int rowOffset;
-	int w;
-};
+void filter(uint8_t* pixels, uint8_t* newPixels, int rowOffset, int w) {
+	constexpr int mask[] = { 1,0,-1,1,0,-1,1,0,-1 };
+	for (int j = 1; j < w - 1; j++) {
+		float sb = pixels[3 * (rowOffset - w + j - 1)] * mask[0];
+		sb += pixels[3 * (rowOffset - w + j)] * mask[1];
+		sb += pixels[3 * (rowOffset - w + j + 1)] * mask[2];
+		sb += pixels[3 * (rowOffset + j - 1)] * mask[3];
+		sb += pixels[3 * (rowOffset + j)] * mask[4];
+		sb += pixels[3 * (rowOffset + j + 1)] * mask[5];
+		sb += pixels[3 * (rowOffset + w + j - 1)] * mask[6];
+		sb += pixels[3 * (rowOffset + w + j)] * mask[7];
+		sb += pixels[3 * (rowOffset + w + j + 1)] * mask[8];
+		sb += 128;
 
-void rowFilter(ProcessedUnit u) {
-	constexpr int mask[] = { 1,0,-1,1,1,-1,1,0,-1 };
-	for (int j = 1; j < u.w - 1; j++) {
-		float sb = u.pixels[3 * (u.rowOffset - u.w + j - 1)] * mask[0];
-		sb += u.pixels[3 * (u.rowOffset - u.w + j)] * mask[1];
-		sb += u.pixels[3 * (u.rowOffset - u.w + j + 1)] * mask[2];
-		sb += u.pixels[3 * (u.rowOffset + j - 1)] * mask[3];
-		sb += u.pixels[3 * (u.rowOffset + j)] * mask[4];
-		sb += u.pixels[3 * (u.rowOffset + j + 1)] * mask[5];
-		sb += u.pixels[3 * (u.rowOffset + u.w + j - 1)] * mask[6];
-		sb += u.pixels[3 * (u.rowOffset + u.w + j)] * mask[7];
-		sb += u.pixels[3 * (u.rowOffset + u.w + j + 1)] * mask[8];
+		float sg = pixels[3 * (rowOffset - w + j - 1) + 1] * mask[0];
+		sg += pixels[3 * (rowOffset - w + j) + 1] * mask[1];
+		sg += pixels[3 * (rowOffset - w + j + 1) + 1] * mask[2];
+		sg += pixels[3 * (rowOffset + j - 1) + 1] * mask[3];
+		sg += pixels[3 * (rowOffset + j) + 1] * mask[4];
+		sg += pixels[3 * (rowOffset + j + 1) + 1] * mask[5];
+		sg += pixels[3 * (rowOffset + w + j - 1) + 1] * mask[6];
+		sg += pixels[3 * (rowOffset + w + j) + 1] * mask[7];
+		sg += pixels[3 * (rowOffset + w + j + 1) + 1] * mask[8];
+		sg += 128;
 
-		float sg = u.pixels[3 * (u.rowOffset - u.w + j - 1) + 1] * mask[0];
-		sg += u.pixels[3 * (u.rowOffset - u.w + j) + 1] * mask[1];
-		sg += u.pixels[3 * (u.rowOffset - u.w + j + 1) + 1] * mask[2];
-		sg += u.pixels[3 * (u.rowOffset + j - 1) + 1] * mask[3];
-		sg += u.pixels[3 * (u.rowOffset + j) + 1] * mask[4];
-		sg += u.pixels[3 * (u.rowOffset + j + 1) + 1] * mask[5];
-		sg += u.pixels[3 * (u.rowOffset + u.w + j - 1) + 1] * mask[6];
-		sg += u.pixels[3 * (u.rowOffset + u.w + j) + 1] * mask[7];
-		sg += u.pixels[3 * (u.rowOffset + u.w + j + 1) + 1] * mask[8];
-
-		float sr = u.pixels[3 * (u.rowOffset - u.w + j - 1) + 2] * mask[0];
-		sr += u.pixels[3 * (u.rowOffset - u.w + j) + 2] * mask[1];
-		sr += u.pixels[3 * (u.rowOffset - u.w + j + 1) + 2] * mask[2];
-		sr += u.pixels[3 * (u.rowOffset + j - 1) + 2] * mask[3];
-		sr += u.pixels[3 * (u.rowOffset + j) + 2] * mask[4];
-		sr += u.pixels[3 * (u.rowOffset + j + 1) + 2] * mask[5];
-		sr += u.pixels[3 * (u.rowOffset + u.w + j - 1) + 2] * mask[6];
-		sr += u.pixels[3 * (u.rowOffset + u.w + j) + 2] * mask[7];
-		sr += u.pixels[3 * (u.rowOffset + u.w + j + 1) + 2] * mask[8];
+		float sr = pixels[3 * (rowOffset - w + j - 1) + 2] * mask[0];
+		sr += pixels[3 * (rowOffset - w + j) + 2] * mask[1];
+		sr += pixels[3 * (rowOffset - w + j + 1) + 2] * mask[2];
+		sr += pixels[3 * (rowOffset + j - 1) + 2] * mask[3];
+		sr += pixels[3 * (rowOffset + j) + 2] * mask[4];
+		sr += pixels[3 * (rowOffset + j + 1) + 2] * mask[5];
+		sr += pixels[3 * (rowOffset + w + j - 1) + 2] * mask[6];
+		sr += pixels[3 * (rowOffset + w + j) + 2] * mask[7];
+		sr += pixels[3 * (rowOffset + w + j + 1) + 2] * mask[8];
+		sr += 128;
 
 		if (sr > 255) {
 			sr = 255;
@@ -64,25 +59,11 @@ void rowFilter(ProcessedUnit u) {
 			sg = 0;
 		}
 
-		u.newPixels[3 * (u.rowOffset + j)] = sb;
-		u.newPixels[3 * (u.rowOffset + j) + 1] = sg;
-		u.newPixels[3 * (u.rowOffset + j) + 2] = sr;
+		newPixels[3 * (rowOffset + j)] = sb;
+		newPixels[3 * (rowOffset + j) + 1] = sg;
+		newPixels[3 * (rowOffset + j) + 2] = sr;
 	}
 
 }
 
-int filter(uint8_t*& pixels, uint8_t*& newPixels, int w, int h) {
-	thread* thlast = nullptr;
-	for (int i = 1 * w; i < (h-1) * w; i += w) {
-		if (thlast) {
-			thlast->detach();
-			thlast = nullptr;
-		}
-		thread* th = new thread(rowFilter, ProcessedUnit{pixels, newPixels, i, w});
-		thlast = th;
-	}
-	thlast->join();
-	thlast = nullptr;
-	return 0;
-}
 
