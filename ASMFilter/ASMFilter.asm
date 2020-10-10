@@ -1,10 +1,12 @@
 .code
 
-filter proc ;
+filter proc ;RCX-pixels, RDX-newPixels, R8-rowOffset, R9-w
 xor eax,eax
-pop ax
-mov rcx, [rcx] ;Uzyskaj wskaünik z referencji do nowych pikseli.
-mov al, BYTE PTR[rcx + 2137]
+mov al, BYTE PTR[rcx + 2137] ;odczytaj wartosc jednego z pixeli(test do usuniecia)
+mov BYTE PTR[rcx + 2137], al ;zapisz wartosc jednego z pixeli(test do usuniecia)
+xor rax, rax
+mov rax, r8
+mov rax, r9
 ret
 filter endp
 

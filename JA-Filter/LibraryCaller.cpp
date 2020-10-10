@@ -19,7 +19,12 @@ void LibraryCaller::UnloadFilter()
 	FreeLibrary(dllHandle);
 }
 
-LibraryCaller::LibraryCaller(): dllName(L"ASMFilter.dll"), threads(1), dllHandle(NULL), filter(nullptr)
+unsigned int LibraryCaller::GetCPUThreads()
+{
+	return std::thread::hardware_concurrency();
+}
+
+LibraryCaller::LibraryCaller(): dllName(L"ASMFilter.dll"), threads(GetCPUThreads()), dllHandle(NULL), filter(nullptr)
 {
 }
 
@@ -27,19 +32,16 @@ int LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int h
 {
 	LoadFilter();
 
-	queue<thread*> threadStack;
+	queue<thread> threadStack;
 	for (int i = 1 * w; i < (h - 1) * w; i += w) {
 		if (threadStack.size() >= threads) {
-			thread* oldestThread = threadStack.front();
+			threadStack.front().join();
 			threadStack.pop();
-			oldestThread->join();
-			delete oldestThread;
 		}
-		threadStack.push(new thread(filter, pixels, newPixels, i, w));
+		threadStack.push(move(thread(filter, pixels, newPixels, i, w)));
 	}
-	while (threadStack.size()) {
-		threadStack.front()->join();
-		delete threadStack.front();
+	while (!threadStack.empty()) {
+		threadStack.front().join();
 		threadStack.pop();
 	}
 

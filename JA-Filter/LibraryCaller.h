@@ -7,12 +7,13 @@ typedef int(_fastcall* FilterProc)(uint8_t* pixels, uint8_t* newPixels, int rowO
 
 class LibraryCaller {
 	std::wstring dllName;
-	int threads;
+	unsigned int threads;
 	HINSTANCE dllHandle;
 	FilterProc filter;
 
 	void LoadFilter();
 	void UnloadFilter();
+	unsigned int GetCPUThreads();
 public:
 	LibraryCaller();
 
