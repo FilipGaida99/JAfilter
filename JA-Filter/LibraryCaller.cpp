@@ -1,4 +1,5 @@
 #include "LibraryCaller.h"
+#include "FileInterface.h"
 #include <thread>
 #include <vector>
 #include <queue>
@@ -24,8 +25,14 @@ unsigned int LibraryCaller::GetCPUThreads()
 	return std::thread::hardware_concurrency();
 }
 
-LibraryCaller::LibraryCaller(): dllName(L"ASMFilter.dll"), threads(GetCPUThreads()), dllHandle(NULL), filter(nullptr)
+LibraryCaller::LibraryCaller(): inputName(L""), outputName(L"output.bmp"), dllName(L"ASMFilter.dll"), threads(GetCPUThreads()), dllHandle(NULL), filter(nullptr)
 {
+}
+
+LibraryCaller& LibraryCaller::instance()
+{
+	static LibraryCaller instance_;
+	return instance_;
 }
 
 int LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int h)
@@ -49,21 +56,50 @@ int LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int h
 	return false;
 }
 
-bool LibraryCaller::ParseArgs(int argc, char* arg[])
+int LibraryCaller::Run()
 {
-	for (int i = 1; i < argc; i++) {
-		if (!strcmp(arg[i], "-asm")) {
-			dllName = L"ASMFilter.dll";
-		}
-		else if (!strcmp(arg[i], "-cpp")) {
-			dllName = L"CPPFilter.dll";
-		}
-		else if (!strcmp(arg[i], "-thr")) {
-			if (argc > (i + 1))
-				threads = atoi(arg[++i]);
-			else
-				return false;
+	int result = 0;
+	uint8_t* pixels = nullptr;
+	uint8_t* newPixels = nullptr;
+	BITMAPFILEHEADER* bmpHeader = nullptr;
+	BITMAPINFOHEADER* bmpInfo = nullptr;
+	if (ReadBMP("test.bmp", pixels, bmpHeader, bmpInfo)) {
+		uint8_t* newPixels = new uint8_t[bmpInfo->biSizeImage];
+		int i = ProcessImage(pixels, newPixels, bmpInfo->biWidth, bmpInfo->biHeight);
+		if (!SaveBMP("testsave.bmp", newPixels, bmpHeader, bmpInfo)) {
+			result = 2;
 		}
 	}
-	return true;
+	else {
+		result = 1;
+	}
+	if(pixels)
+		delete[] pixels;
+	if(newPixels)
+		delete[] newPixels;
+	if(bmpHeader)
+		delete bmpHeader;
+	if(bmpInfo)
+		delete bmpInfo;
+	return result;
 }
+
+
+void LibraryCaller::SetASM()
+{
+	dllName = L"ASMFilter.dll";
+}
+
+void LibraryCaller::SetCPP()
+{
+	dllName = L"CPPFilter.dll";
+}
+
+void LibraryCaller::SetThreads(int x)
+{
+	threads = x;
+	if (threads <= 0) {
+		threads = GetCPUThreads();
+	}
+}
+

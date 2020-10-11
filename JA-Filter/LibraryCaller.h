@@ -14,10 +14,18 @@ class LibraryCaller {
 	void LoadFilter();
 	void UnloadFilter();
 	unsigned int GetCPUThreads();
-public:
 	LibraryCaller();
+public:
+	std::wstring inputName;
+	std::wstring outputName;
+
+	static LibraryCaller& instance();
 
 	int ProcessImage(uint8_t* pixels, uint8_t* newPixels, int w, int h);
-	bool ParseArgs(int argc, char* arg[]);
+	int Run();
+
+	void SetASM();
+	void SetCPP();
+	void SetThreads(int x);
 
 };
