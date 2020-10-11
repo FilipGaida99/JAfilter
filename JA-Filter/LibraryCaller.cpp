@@ -1,7 +1,9 @@
 #include "LibraryCaller.h"
+#include "FileInterface.h"
 #include <thread>
 #include <vector>
 #include <queue>
+#include <sstream>
 
 using namespace std;
 
@@ -24,11 +26,11 @@ unsigned int LibraryCaller::GetCPUThreads()
 	return std::thread::hardware_concurrency();
 }
 
-LibraryCaller::LibraryCaller(): dllName(L"ASMFilter.dll"), threads(GetCPUThreads()), dllHandle(NULL), filter(nullptr)
+LibraryCaller::LibraryCaller(): inputFile("input.bmp"), outputFile("output.bmp"), dllName(L"ASMFilter.dll"), threads(GetCPUThreads()), dllHandle(NULL), filter(nullptr)
 {
 }
 
-int LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int h)
+void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int h)
 {
 	LoadFilter();
 
@@ -46,24 +48,78 @@ int LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int h
 	}
 
 	UnloadFilter();
-	return false;
 }
 
-bool LibraryCaller::ParseArgs(int argc, char* arg[])
+void LibraryCaller::Run()
 {
-	for (int i = 1; i < argc; i++) {
-		if (!strcmp(arg[i], "-asm")) {
-			dllName = L"ASMFilter.dll";
-		}
-		else if (!strcmp(arg[i], "-cpp")) {
-			dllName = L"CPPFilter.dll";
-		}
-		else if (!strcmp(arg[i], "-thr")) {
-			if (argc > (i + 1))
-				threads = atoi(arg[++i]);
+	uint8_t* pixels = nullptr;
+	BITMAPFILEHEADER* bmpHeader = nullptr;
+	BITMAPINFOHEADER* bmpInfo = nullptr;
+	ReadBMP(inputFile.c_str(), pixels, bmpHeader, bmpInfo);
+	uint8_t* newPixels = new uint8_t[bmpInfo->biSizeImage];
+	ProcessImage(pixels, newPixels, bmpInfo->biWidth, bmpInfo->biHeight);
+	SaveBMP(outputFile.c_str(), newPixels, bmpHeader, bmpInfo);
+
+	if(pixels)
+		delete[] pixels;
+	if (newPixels)
+		delete[] newPixels;
+	if (bmpHeader)
+		delete bmpHeader;
+	if (bmpInfo)
+		delete bmpInfo;
+}
+
+ParseCode LibraryCaller::ParseArgs(const std::string& args)
+{
+	std::stringstream ss(args);
+	std::string buffer;
+	while (ss >> buffer) {
+		if (buffer == "-asm")
+			SetASM();
+		else if (buffer == "-cpp")
+			SetCPP();
+		else if (buffer == "-thr") {
+			int newThreads = 0;
+			if (ss >> newThreads)
+				SetThreads(newThreads);
 			else
-				return false;
+				return ValueMiss;
 		}
+		else if (buffer == "-i") {
+			std::string newInput;
+			if (ss >> newInput)
+				inputFile = newInput;
+			else
+				return ValueMiss;
+		}
+		else if (buffer == "-o") {
+			std::string newOutput;
+			if (ss >> newOutput)
+				outputFile = newOutput;
+			else
+				return ValueMiss;
+		}
+		else if (buffer == "-exit")
+			return Exit;
 	}
-	return true;
+	return Passed;
+}
+
+void LibraryCaller::SetThreads(int newThreads)
+{
+	threads = newThreads;
+	if (threads <= 0) {
+		threads = GetCPUThreads();
+	}
+}
+
+void LibraryCaller::SetASM()
+{
+	dllName = L"ASMFilter.dll";
+}
+
+void LibraryCaller::SetCPP()
+{
+	dllName = L"CPPFilter.dll";
 }

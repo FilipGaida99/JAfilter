@@ -44,6 +44,7 @@ bool SaveBMP(const char* filename, uint8_t*& pixels, BITMAPFILEHEADER*& bmpHeade
 	FILE* pFile = fopen(filename, "wb");
 	if (pFile == NULL)
 	{
+		printf("Blad otwarcia pliku wyjsciowego.\n");
 		return false;
 	}
 	bmpHeader->bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);

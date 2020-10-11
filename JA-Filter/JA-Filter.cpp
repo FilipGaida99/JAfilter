@@ -1,22 +1,29 @@
 ﻿#include <iostream>
+#include <string>
 #include "FileInterface.h"
 #include "LibraryCaller.h"
 
 int main(int argc, char* arg[])
 {
     LibraryCaller library;
-    library.ParseArgs(argc, arg);
+    std::string args;
+    for (int i = 1; i < argc; i++) {
+        args += arg[i];
+        args += " ";
+    }
+    do {
+        switch (library.ParseArgs(args)) {
+        case Passed:
+            library.Run();
+            break;
+        case ValueMiss:
+            std::cout << "Jeden z argumentow nie otrzymal odpowiedniej wartosci\n";
+            break;
+        case Exit:
+            return 0;
+        }
+        std::cout << "Pass new arguments (or -exit): \n";
+    } while (std::getline(std::cin,args));
 
-    uint8_t* pixels = nullptr;
-    BITMAPFILEHEADER* bmpHeader = nullptr;
-    BITMAPINFOHEADER* bmpInfo = nullptr;
-    ReadBMP("test.bmp", pixels, bmpHeader, bmpInfo);
-    uint8_t* newPixels = new uint8_t[bmpInfo->biSizeImage];
-    int i = library.ProcessImage(pixels, newPixels, bmpInfo->biWidth, bmpInfo->biHeight);
-    SaveBMP("testsave.bmp", newPixels, bmpHeader, bmpInfo);
-
-    delete[] pixels;
-    delete[] newPixels;
-    delete bmpHeader;
-    delete bmpInfo;
+    return 0;
 }

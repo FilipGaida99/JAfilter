@@ -4,8 +4,11 @@
 
 typedef int(_fastcall* FilterProc)(uint8_t* pixels, uint8_t* newPixels, int rowOffset, int w);
 
+enum ParseCode{Passed, ValueMiss, Exit};
 
 class LibraryCaller {
+	std::string inputFile;
+	std::string outputFile;
 	std::wstring dllName;
 	unsigned int threads;
 	HINSTANCE dllHandle;
@@ -17,7 +20,11 @@ class LibraryCaller {
 public:
 	LibraryCaller();
 
-	int ProcessImage(uint8_t* pixels, uint8_t* newPixels, int w, int h);
-	bool ParseArgs(int argc, char* arg[]);
+	void ProcessImage(uint8_t* pixels, uint8_t* newPixels, int w, int h);
+	void Run();
+	ParseCode ParseArgs(const std::string& args);
 
+	void SetThreads(int newThreads);
+	void SetASM();
+	void SetCPP();
 };
