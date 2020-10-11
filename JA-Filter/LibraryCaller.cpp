@@ -50,16 +50,23 @@ void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int 
 	UnloadFilter();
 }
 
-void LibraryCaller::Run()
+bool LibraryCaller::Run()
 {
+	int result = true;
 	uint8_t* pixels = nullptr;
+	uint8_t* newPixels = nullptr;
 	BITMAPFILEHEADER* bmpHeader = nullptr;
 	BITMAPINFOHEADER* bmpInfo = nullptr;
-	ReadBMP(inputFile.c_str(), pixels, bmpHeader, bmpInfo);
-	uint8_t* newPixels = new uint8_t[bmpInfo->biSizeImage];
-	ProcessImage(pixels, newPixels, bmpInfo->biWidth, bmpInfo->biHeight);
-	SaveBMP(outputFile.c_str(), newPixels, bmpHeader, bmpInfo);
-
+	if (ReadBMP(inputFile.c_str(), pixels, bmpHeader, bmpInfo)) {
+		newPixels = new uint8_t[bmpInfo->biSizeImage];
+		ProcessImage(pixels, newPixels, bmpInfo->biWidth, bmpInfo->biHeight);
+		if (!SaveBMP(outputFile.c_str(), newPixels, bmpHeader, bmpInfo)) {
+			result = false;
+		}
+	}
+	else {
+		result = false;
+	}
 	if(pixels)
 		delete[] pixels;
 	if (newPixels)
@@ -68,6 +75,7 @@ void LibraryCaller::Run()
 		delete bmpHeader;
 	if (bmpInfo)
 		delete bmpInfo;
+	return result;
 }
 
 ParseCode LibraryCaller::ParseArgs(const std::string& args)

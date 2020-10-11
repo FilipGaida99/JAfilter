@@ -27,6 +27,10 @@ bool ReadBMP(const char* filename, uint8_t*& pixels, BITMAPFILEHEADER*& bmpHeade
 		printf("Plik nie jest bitmapa.\n");
 		return false;
 	}
+	if (bmpInfo->biBitCount != 24) {
+		printf("Plik nie zawiera 24-bitowego zapisu kolorów.\n");
+		return false;
+	}
 	// Alokowanie pamiêci dla plikseli.
 	pixels = new uint8_t[bmpInfo->biSizeImage];
 

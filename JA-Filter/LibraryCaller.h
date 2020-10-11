@@ -21,7 +21,7 @@ public:
 	LibraryCaller();
 
 	void ProcessImage(uint8_t* pixels, uint8_t* newPixels, int w, int h);
-	void Run();
+	bool Run();
 	ParseCode ParseArgs(const std::string& args);
 
 	void SetThreads(int newThreads);
