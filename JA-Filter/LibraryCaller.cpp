@@ -34,13 +34,19 @@ void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int 
 {
 	LoadFilter();
 
+	int padding = 0;
+	if (3*w % 4 != 0) {
+		padding = 4 - (3*w) % 4;
+	}
+	int realWidth = 3 * w + padding;
+
 	queue<thread> threadStack;
-	for (int i = 1 * w; i < (h - 1) * w; i += w) {
+	for (int i = 1; i < (h - 1); i += 1) {
 		if (threadStack.size() >= threads) {
 			threadStack.front().join();
 			threadStack.pop();
 		}
-		threadStack.push(move(thread(filter, pixels, newPixels, i, w)));
+		threadStack.push(move(thread(filter, pixels, newPixels, i*realWidth, realWidth)));
 	}
 	while (!threadStack.empty()) {
 		threadStack.front().join();
