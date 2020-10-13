@@ -1,6 +1,8 @@
 ﻿#include <iostream>
 #include <string>
+#if _DEBUG
 #include "vld.h"
+#endif
 #include "LibraryCaller.h"
 
 int main(int argc, char* arg[])

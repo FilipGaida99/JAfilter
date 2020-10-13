@@ -5,7 +5,7 @@ using namespace std;
 const int mask[] = { 1,0,-1,1,0,-1,1,0,-1 };
 
 void filter(uint8_t* pixels, uint8_t* newPixels, int rowOffset, int w) {
-	constexpr int mask[] = { 1,0,-1,1,0,-1,1,0,-1 };
+	constexpr int mask[] = { 1,0,-1,1,1,-1,1,0,-1 };
 	for (int j = 1; j < w - 1; j++) {
 		float sb = pixels[3 * (rowOffset - w + j - 1)] * mask[0];
 		sb += pixels[3 * (rowOffset - w + j)] * mask[1];
@@ -16,7 +16,6 @@ void filter(uint8_t* pixels, uint8_t* newPixels, int rowOffset, int w) {
 		sb += pixels[3 * (rowOffset + w + j - 1)] * mask[6];
 		sb += pixels[3 * (rowOffset + w + j)] * mask[7];
 		sb += pixels[3 * (rowOffset + w + j + 1)] * mask[8];
-		sb += 128;
 
 		float sg = pixels[3 * (rowOffset - w + j - 1) + 1] * mask[0];
 		sg += pixels[3 * (rowOffset - w + j) + 1] * mask[1];
@@ -27,7 +26,6 @@ void filter(uint8_t* pixels, uint8_t* newPixels, int rowOffset, int w) {
 		sg += pixels[3 * (rowOffset + w + j - 1) + 1] * mask[6];
 		sg += pixels[3 * (rowOffset + w + j) + 1] * mask[7];
 		sg += pixels[3 * (rowOffset + w + j + 1) + 1] * mask[8];
-		sg += 128;
 
 		float sr = pixels[3 * (rowOffset - w + j - 1) + 2] * mask[0];
 		sr += pixels[3 * (rowOffset - w + j) + 2] * mask[1];
@@ -38,7 +36,6 @@ void filter(uint8_t* pixels, uint8_t* newPixels, int rowOffset, int w) {
 		sr += pixels[3 * (rowOffset + w + j - 1) + 2] * mask[6];
 		sr += pixels[3 * (rowOffset + w + j) + 2] * mask[7];
 		sr += pixels[3 * (rowOffset + w + j + 1) + 2] * mask[8];
-		sr += 128;
 
 		if (sr > 255) {
 			sr = 255;
