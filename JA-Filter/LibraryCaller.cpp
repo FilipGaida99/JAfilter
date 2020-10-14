@@ -2,6 +2,7 @@
 #include "FileInterface.h"
 #include <thread>
 #include <vector>
+#include <array>
 #include <queue>
 #include <sstream>
 
@@ -23,7 +24,11 @@ void LibraryCaller::UnloadFilter()
 
 unsigned int LibraryCaller::GetCPUThreads()
 {
-	return std::thread::hardware_concurrency();
+	int cores = std::thread::hardware_concurrency();
+	if (cores <= 0) {
+		return 1;
+	}
+	return cores;
 }
 
 LibraryCaller::LibraryCaller(): inputFile("input.bmp"), outputFile("output.bmp"), dllName(L"ASMFilter.dll"), threads(GetCPUThreads()), dllHandle(NULL), filter(nullptr)
@@ -39,18 +44,28 @@ void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int 
 		padding = 4 - (3*w) % 4;
 	}
 	int realWidth = 3 * w + padding;
-
-	queue<thread> threadStack;
-	for (int i = 1; i < (h - 1); i += 1) {
-		if (threadStack.size() >= threads) {
-			threadStack.front().join();
-			threadStack.pop();
+	int size = (h-2) * realWidth; //Rozmiar jest mniejszy o dwa wiersze, poniewa¿ nie jest prztwarzana krawêdŸ.
+	int threadSize = size / threads;
+	int remaining = size % threads;
+	int processedSize = 0;
+	std::vector<thread> threadsContainer;
+	for (int i = 0; i < threads; i += 1) {
+		int threadDataSize = threadSize;
+		if (remaining > 0) {
+			threadDataSize+=3;
+			remaining--;
 		}
-		threadStack.push(move(thread(filter, pixels, newPixels, i*realWidth, realWidth)));
+
+		threadsContainer.push_back(move(thread(filter,
+			pixels + (processedSize + realWidth), //tablica przesuniêta o jeden wiersz i iloœæ danych przetworzonych przez poprzedni w¹tek.
+			newPixels + (processedSize + realWidth), //przesuniête podobnie jak poprzednia tablica
+			threadDataSize,
+			realWidth)));
+
+		processedSize += threadDataSize;
 	}
-	while (!threadStack.empty()) {
-		threadStack.front().join();
-		threadStack.pop();
+	for (auto& thr : threadsContainer) {
+		thr.join();
 	}
 
 	UnloadFilter();

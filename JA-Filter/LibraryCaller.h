@@ -2,7 +2,7 @@
 #include <string>
 #include <Windows.h>
 
-typedef int(_fastcall* FilterProc)(uint8_t* pixels, uint8_t* newPixels, int rowOffset, int w);
+typedef int(_fastcall* FilterProc)(uint8_t* pixels, uint8_t* newPixels, int proccesedSize, int w);
 
 enum ParseCode{Passed, ValueMiss, Exit};
 
