@@ -35,30 +35,28 @@ LibraryCaller::LibraryCaller(): inputFile("input.bmp"), outputFile("output.bmp")
 {
 }
 
-void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int w, int h)
+void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int imageSize, int h)
 {
 	LoadFilter();
-
-	int padding = 0;
-	if (3*w % 4 != 0) {
-		padding = 4 - (3*w) % 4;
-	}
-	int realWidth = 3 * w + padding;
-	int size = (h-2) * realWidth; //Rozmiar jest mniejszy o dwa wiersze, poniewa¿ nie jest prztwarzana krawêdŸ.
-	int threadSize = size / threads;
-	int remaining = size % threads;
-	int processedSize = 0;
+	//Rzeczywista szerokoœæ wiersza w bajtach.
+	int realWidth = imageSize / h;
+	//Ile wierszy zostanie przypisane pojedynczemu w¹tkowi.
+	int threadRows = (h-2) / threads; 
+	//Ile wierszy pozostanie nieprzypisanych.
+	int remaining = (h-2) % threads; 
+	//Pominiêcie dolnej krawêdzi przez uznanie jej za przetworzonej.
+	int processedSize = realWidth; 
 	std::vector<thread> threadsContainer;
 	for (int i = 0; i < threads; i += 1) {
-		int threadDataSize = threadSize;
+		int threadDataSize = threadRows * realWidth;
 		if (remaining > 0) {
-			threadDataSize+=3;
+			threadDataSize += realWidth; //Gdy zostaj¹ dodatkowe wiersze, przypisz dodatkowy wiersz najstarszm w¹tkom.
 			remaining--;
 		}
 
 		threadsContainer.push_back(move(thread(filter,
-			pixels + (processedSize + realWidth), //tablica przesuniêta o jeden wiersz i iloœæ danych przetworzonych przez poprzedni w¹tek.
-			newPixels + (processedSize + realWidth), //przesuniête podobnie jak poprzednia tablica
+			pixels + (processedSize), //tablica przesuniêta o iloœæ danych przetworzonych przez poprzedni w¹tek.
+			newPixels + (processedSize), //przesuniête podobnie jak poprzednia tablica
 			threadDataSize,
 			realWidth)));
 
@@ -80,7 +78,7 @@ bool LibraryCaller::Run()
 	BITMAPINFOHEADER* bmpInfo = nullptr;
 	if (ReadBMP(inputFile.c_str(), pixels, bmpHeader, bmpInfo)) {
 		newPixels = new uint8_t[bmpInfo->biSizeImage];
-		ProcessImage(pixels, newPixels, bmpInfo->biWidth, bmpInfo->biHeight);
+		ProcessImage(pixels, newPixels, bmpInfo->biSizeImage, bmpInfo->biHeight);
 		if (!SaveBMP(outputFile.c_str(), newPixels, bmpHeader, bmpInfo)) {
 			result = false;
 		}
