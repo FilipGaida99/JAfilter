@@ -24,7 +24,7 @@ void LibraryCaller::UnloadFilter()
 
 unsigned int LibraryCaller::GetCPUThreads()
 {
-	int cores = std::thread::hardware_concurrency();
+	unsigned int cores = std::thread::hardware_concurrency();
 	if (cores <= 0) {
 		return 1;
 	}
@@ -45,12 +45,12 @@ void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int imageSi
 	//Ile bajtów pozostanie nieprzypisanych.
 	//Liczba to iloœæ bajtów, które nie zmieœci³y siê w zestawie 16 bajtów, oraz te które zosta³y przypisane
 	//do 16, ale nie zosta³y przypisane do w¹tku. Zostan¹ rodzdzielone pomiêdzy w¹tki.
-	int remaining = (((h - 2) * realWidth)) % 16 + ((((h - 2) * realWidth) >> 4) % threads)<<4;
+	int remaining = (((h - 2) * realWidth)) % 16 + (((((h - 2) * realWidth) >> 4) % threads) << 4);
 	//Pominiêcie dolnej krawêdzi przez uznanie jej za przetworzonej.
 	int processedSize = realWidth; 
 
 	std::vector<thread> threadsContainer;
-	for (int i = 0; i < threads; i += 1) {
+	for (unsigned int i = 0; i < threads; i += 1) {
 		int threadDataSize = threadDefaultSize;
 		if (remaining > 0) {
 			//Gdy zostaj¹ dodatkowe bajty, przypisz dodatkowe 16 lub mniej bajtów najstarszm w¹tkom.
@@ -146,7 +146,7 @@ ParseCode LibraryCaller::ParseArgs(const std::string& args)
 void LibraryCaller::SetThreads(int newThreads)
 {
 	threads = newThreads;
-	if (threads <= 0) {
+	if (newThreads <= 0) {
 		threads = GetCPUThreads();
 	}
 }
