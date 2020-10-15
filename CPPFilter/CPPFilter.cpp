@@ -5,8 +5,10 @@ using namespace std;
 const int mask[] = { 1,0,-1,1,0,-1,1,0,-1 };
 
 void filter(uint8_t* pixels, uint8_t* newPixels, int dataSize, int w) {
-	constexpr int mask[] = { 1,0,-1,1,1,-1,1,0,-1 };
-	for (int j = 0; j <= dataSize; j+=1) {
+	constexpr int mask[] = { 1, 0, -1,
+							 1, 1, -1,
+							 1, 0, -1 };
+	for (int j = 0; j < dataSize; j+=1) {
 		float s = pixels[- w + j - 3] * mask[0];
 		s += pixels[- w + j] * mask[1];
 		s += pixels[- w + j + 3] * mask[2];

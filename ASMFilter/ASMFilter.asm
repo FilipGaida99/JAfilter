@@ -1,6 +1,7 @@
 .code
 
 filter proc ;RCX-pixels, RDX-newPixels, R8-dataSize, R9-w
+push rbx ;zachowanie rbx na stosie.
 xor rbx,rbx ;wyzerowanie RBX s³u¿¹cego jako licznik.
 xorps xmm1, xmm1 ; wyzerowanie Xmm1 slu¿¹cego do konwersji spakowanych Byte na Word
 przetwarzanie: 
@@ -16,6 +17,7 @@ jl przetwarzanie
 xor rax, rax
 mov rax, r8
 mov rax, r9
+pop rbx ;powrót rbx do stanu z przed uruchomienia funkcji.
 ret
 filter endp
 

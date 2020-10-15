@@ -40,26 +40,36 @@ void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int imageSi
 	LoadFilter();
 	//Rzeczywista szerokoœæ wiersza w bajtach.
 	int realWidth = imageSize / h;
-	//Ile wierszy zostanie przypisane pojedynczemu w¹tkowi.
-	int threadRows = (h-2) / threads; 
-	//Ile wierszy pozostanie nieprzypisanych.
-	int remaining = (h-2) % threads; 
+	//Ile bajtów zostanie przypisane pojedynczemu w¹tkowi.
+	int threadDefaultSize = ((((h - 2) * realWidth) >> 4) / threads) << 4;
+	//Ile bajtów pozostanie nieprzypisanych.
+	//Liczba to iloœæ bajtów, które nie zmieœci³y siê w zestawie 16 bajtów, oraz te które zosta³y przypisane
+	//do 16, ale nie zosta³y przypisane do w¹tku. Zostan¹ rodzdzielone pomiêdzy w¹tki.
+	int remaining = (((h - 2) * realWidth)) % 16 + ((((h - 2) * realWidth) >> 4) % threads)<<4;
 	//Pominiêcie dolnej krawêdzi przez uznanie jej za przetworzonej.
 	int processedSize = realWidth; 
+
 	std::vector<thread> threadsContainer;
 	for (int i = 0; i < threads; i += 1) {
-		int threadDataSize = threadRows * realWidth;
+		int threadDataSize = threadDefaultSize;
 		if (remaining > 0) {
-			threadDataSize += realWidth; //Gdy zostaj¹ dodatkowe wiersze, przypisz dodatkowy wiersz najstarszm w¹tkom.
-			remaining--;
+			//Gdy zostaj¹ dodatkowe bajty, przypisz dodatkowe 16 lub mniej bajtów najstarszm w¹tkom.
+			if (remaining >= 16) {
+				threadDataSize += 16;
+			}
+			else {
+				threadDataSize += remaining;
+			}
+			remaining-=16;
 		}
 
 		threadsContainer.push_back(move(thread(filter,
-			pixels + (processedSize), //tablica przesuniêta o iloœæ danych przetworzonych przez poprzedni w¹tek.
-			newPixels + (processedSize), //przesuniête podobnie jak poprzednia tablica
+			pixels + processedSize, //tablica przesuniêta o iloœæ danych przetworzonych przez poprzedni w¹tek.
+			newPixels + processedSize, //przesuniête podobnie jak poprzednia tablica.
 			threadDataSize,
 			realWidth)));
 
+		//Uznaj dane przetwarzane przez w¹tek jako przetworzone.
 		processedSize += threadDataSize;
 	}
 	for (auto& thr : threadsContainer) {
