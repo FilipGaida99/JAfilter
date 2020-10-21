@@ -1,0 +1,1 @@
+JA-Filter.exe -i pertest.bmp -o persave.bmp -cpp -thr 1

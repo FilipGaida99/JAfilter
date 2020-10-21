@@ -1,3 +1,11 @@
+//Temat: Filtrowanie uwypuklaj¹ce skierowane na zachód.
+//Algorytm bêdzie filtrowa³ ka¿dy z kolorów pixeli zgodnie z mask¹
+//1 0 -1
+//1 1 -1
+//1 0 -1
+//Wykona³: Filip Gaida gr.3 semestr 5, 2020/2021
+
+
 #include "FileInterface.h"
 
 bool ReadBMP(const char* filename, uint8_t*& pixels, BITMAPFILEHEADER*& bmpHeader, BITMAPINFOHEADER*& bmpInfo)
