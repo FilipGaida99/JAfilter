@@ -14,6 +14,7 @@ class LibraryCaller {
 	unsigned int threads; //UStawiona liczba w¹tków.
 	HINSTANCE dllHandle; //Uchwyt dla dynamicznie linkowanej biblioteki.
 	FilterProc filter; //WskaŸnik na funkcjê filtruj¹c¹
+	bool hasAVX2; //Informacja czy procesor wspiera rozkazy u¿ywane w bibliotece asemblerowej.
 
 	std::chrono::microseconds lastRunDurration; //Czas trwania ostatniego filtrowania.
 	int lastWidth; //Ostatnia odczytana szerokoœæ.
@@ -25,6 +26,8 @@ class LibraryCaller {
 	void UnloadFilter();
 	//Zwraca oblicza odpowiedni¹ liczbê w¹tków. Gdy komputer nie podaje tych danych, ustawia 1.
 	unsigned int GetCPUThreads();
+	//Sprawdza dostêpnoœæ rozkazów wektorowych.
+	bool CheckAVX2();
 public:
 	//Konstruktor.
 	LibraryCaller();

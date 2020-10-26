@@ -41,8 +41,33 @@ unsigned int LibraryCaller::GetCPUThreads()
 	return cores;
 }
 
-LibraryCaller::LibraryCaller(): inputFile("input.bmp"), outputFile("output.bmp"), dllName(L"ASMFilter.dll"), threads(GetCPUThreads()), dllHandle(NULL), filter(nullptr)
+bool LibraryCaller::CheckAVX2()
 {
+	int info[4];
+	__cpuidex(info, 0, 0);
+	int nIds = info[0];
+
+	__cpuidex(info, 0x80000000, 0);
+	unsigned nExIds = info[0];
+
+	if (nIds >= 0x00000007) {
+		__cpuidex(info, 0x00000007, 0);
+		return (info[1] & ((int)1 << 5)) != 0;
+	}
+
+	return false;
+}
+
+LibraryCaller::LibraryCaller(): 
+	inputFile("input.bmp"), 
+	outputFile("output.bmp"), 
+	dllName(L""), 
+	threads(GetCPUThreads()), 
+	dllHandle(NULL), 
+	filter(nullptr),
+	hasAVX2(CheckAVX2())
+{
+	SetASM();
 }
 
 void LibraryCaller::ProcessImage(uint8_t* pixels, uint8_t* newPixels,int imageSize, int h)
@@ -202,7 +227,10 @@ void LibraryCaller::SetThreads(int newThreads)
 
 void LibraryCaller::SetASM()
 {
-	dllName = L"ASMFilter.dll";
+	if(hasAVX2)
+		dllName = L"ASMFilter.dll";
+	else 
+		SetCPP(); //Gdy rozkazy niedostêpne skorzystaj z c++.
 }
 
 void LibraryCaller::SetCPP()
